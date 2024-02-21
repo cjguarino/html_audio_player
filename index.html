@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="audPlayer">
+    <label style="white-space:nowrap">
+      <button id="rewind" class="audPlayerBtn"> << </button>
+      <button id="play" class="audPlayerBtn"> > </button>
+      <button id="pause" class="audPlayerBtn"> | | </button>
+      <button id="fastForward" class="audPlayerBtn"> >> </button>
+    </label>
+    &nbsp;
+    <div class="progressBar" id="progressBar">
+      <div class="progress"></div>
+    </div>
+    &nbsp;
+    <label class="time">00:00/00:00</label>
+    &nbsp;
+    <button id="download" class="audPlayerBtn"> &#8595; </button>
+    &nbsp;
+  </div>
+</body>
+
+</html>
+
+
+<!-- JAVASCRIPT -->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+
+<script>
+const Audios = [
+  { file: 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav' },
+  { file: 'https://www2.cs.uic.edu/~i101/SoundFiles/PinkPanther30.wav' },
+  { file: 'https://samples-files.com/samples/Audio/wav/sample-file-2.wav', }
+];
+
+//Variables
+const audio = new Audio();
+let currentAudioIndex = 0;
+let isPlaying = false;
+const playButton = document.getElementById('play');
+const pauseButton = document.getElementById('pause');
+const downloadButton = document.getElementById('download')
+const rewindButton = document.getElementById('rewind')
+const fastForwardButton = document.getElementById('fastForward')
+const progressBar = document.getElementById('progressBar')
+const progress = document.querySelector('.progress');
+
+//Plays the Audio
+function playAudio() {
+  const currentAudio = Audios[currentAudioIndex];
+
+  if (audio.src != currentAudio.file) {
+    audio.src = currentAudio.file;
+    progress.style.width = 0; 
+  }
+
+  audio.play();
+  isPlaying = true;
+  playButton.style.display = 'none';
+  pauseButton.style.display = 'inline-block';
+}
+
+//Pauses the audio
+function pauseAudio() {
+  audio.pause();
+  isPlaying = false;
+  playButton.style.display = 'inline-block';
+  pauseButton.style.display = 'none';
+}
+
+//Next audio
+function playNextAudio() {
+  currentAudioIndex++;
+  if (currentAudioIndex >= Audios.length) { currentAudioIndex = 0 }
+  playAudio();
+}
+
+//Rewind
+function rewind() {
+  audio.currentTime = audio.currentTime - 5
+}
+
+//Fast Forward
+function fastForward() {
+  audio.currentTime = audio.currentTime + 5
+}
+
+//Updates progress bar
+function updateProgressBar() {
+  const time = document.querySelector('.time');
+  const progressPercent = (audio.currentTime / audio.duration) * 100;
+  progress.style.width = `${progressPercent}%`;
+
+  minutes = parseInt(parseInt(audio.currentTime) / 60)
+  seconds = parseInt(audio.currentTime) - (minutes * 60)
+
+  durMinutes = parseInt(parseInt(audio.duration) / 60)
+  durSeconds = parseInt(audio.duration) - (durMinutes * 60) 
+
+  time.innerHTML = `${pad(minutes)}:${pad(seconds)}/${pad(durMinutes)}:${pad(durSeconds)}`  
+
+  if (audio.currentTime >= audio.duration) { pauseAudio(); }
+}
+
+//Simple pad helper
+function pad(x) {
+  if (x < 10) { return `0${x}` } 
+  return x
+}
+
+//Downloads the .wav file
+function download() {
+  const a = document.createElement('a')
+  let url = Audios[currentAudioIndex].file
+  a.href = url
+  a.download = url.split('/').pop()
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
+//Updates progress bar to where it's clicked
+$('#progressBar').on("mousedown", function (e){
+  if (!isNaN(audio.duration)) {
+    fraction = e.offsetX / progressBar.clientWidth
+    spot = fraction * audio.duration
+    audio.currentTime = spot
+  }
+});
+
+//Event Listeners
+playButton.addEventListener('click', playAudio);
+pauseButton.addEventListener('click', pauseAudio);
+audio.addEventListener('ended', playNextAudio);
+audio.addEventListener('timeupdate', updateProgressBar);
+downloadButton.addEventListener('click',download)
+rewindButton.addEventListener('click',rewind)
+fastForwardButton.addEventListener('click',fastForward)
+
+</script>
+
+
+<!-- CSS -->
+<style>
+
+#time {
+  font-size: 11px;
+}
+
+#pause {
+  display: none;
+}
+
+.progressBar {
+  width: 100%;
+  /* width: 100px; if we need to shrink for the app */
+  height: 10px;
+  background-color: #ddd;
+  cursor: pointer;
+}
+
+.progress {
+  height: 100%;
+  background-color: #333;
+  width: 0;
+}
+
+#audPlayer {
+  padding: 1px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid black;
+  background-color: white;
+  color: black;
+  text-align: center;
+  width: 400px;
+}
+
+.audio-info h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: purple;
+}
+
+.audio-info h3 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: blue;
+}
+
+.audPlayerBtn {
+  background-color: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#download {
+  border: 1px solid black;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+#download:hover {
+  background-color: aqua;
+}
+
+</style>
+
